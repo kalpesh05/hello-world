@@ -93,8 +93,3 @@ while($res2 = mysqli_fetch_assoc($pet)){
  }
  
  
- function GItdiff()
- {
-	 
-	 return "Git Diff";
- }
