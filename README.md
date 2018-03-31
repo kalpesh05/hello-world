@@ -49,3 +49,17 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+
+
+## Step to run demo [you need basic idea of cmd and some of laravel command]
+<ul>
+  <li>First of after downloading demo goto terminal and locate where you put this demo </li>
+  <li>Then you type <b>php artisan server</b> , which is basic command to run this demo this we need later before we need to create database tables which we will use</li>
+  <li>Now go to phpmyadmin</li>
+  <li>For this demo you need to create mysql database named <i>jwtapi</i> , which i use in this demo later on you can change it as you undestand concept</li>
+  <li>In laravel most important file is <b>.env</b> , which containn all your project detail like databse name and others</li>
+  <li>Now agian go to terminal or cmd where your project(demo) located ,Then run command <b>php artisan migrate</b> which will create all required table in your database you need to woory about it</li>
+  <li>After this process now you need to call it's main command <b>php artisan serve</b> now you demo is ready test it</li>
+  <li>You can alos use command <i>php artisan help migration</i> to undestand all command related to migration </li>
+  
+</ul>
