@@ -1,0 +1,7 @@
+1) /etc/httpd/conf
+ 	- http.conf
+
+2) Ip For DiveThru : http://34.215.40.163/
+
+3) sudo service httpd start //start apache server
+sudo service httpd stop //Stop apache server

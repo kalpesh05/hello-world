@@ -1,0 +1,29 @@
+
+if getting filezilla error message like => error while writing: received failure with description 'Failure'
+Or
+get blank file when open file from filezilla
+
+
+1) it is becuase of aws ec2(EBS) storage volume limit exceeded for that need to modify volme limit 
+
+2) go to aws console and select ec2 instance and copy Instance ID 
+
+3) now go ELASTIC BLOCK STORE > Valumes then in search bar pase Instance ID
+
+4) So you get the Volume attached with related instance
+
+5) In this window search for ACTION tab click on it the you see Create Snapshot
+
+6) Then check in Snapshot tab that your snapshot cretaed or not 
+
+7) After that back again into Volumes
+
+8) Then click on above Action tab then drop down open in that select "Modify Volume"
+
+9) Then one popup screen open up in that search for " Size "  in that you can see your old size of volume 
+
+10) Now change it with new size but remember that in Free Tier AWS  EC2 gives only 30Gb storage space if you need more then need to pay for that
+
+11) Link for how to modify volume => https://www.youtube.com/watch?v=1Brbqkzqvjw
+
+ssh -i "LinuxTestApp.pem" ec2-user@ec2-54-89-136-58.compute-1.amazonaws.com

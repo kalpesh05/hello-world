@@ -1,0 +1,223 @@
+const functions = require('firebase-functions');
+var ActiveCampaign = require("activecampaign");
+
+var ac = new ActiveCampaign("https://divethru.api-us1.com", 'b865d4502437a2f7597d0ed642a56c64b5dc960d06b6d5c59cf496d4eea253b660c32d12');
+
+exports.newRegistration = functions.database.ref('/Users/{pushId}')
+  .onCreate((snapshot, context) => {
+    const value = snapshot.val();
+    console.log('context', context.params.pushId);
+    console.log('value ', value);
+
+    return addUser(snapshot, value);
+  });
+
+exports.changeContactDataFirstName = functions.database.ref('/Users/{pushId}/first_name')
+  .onUpdate((change, context) => {
+    const value = change.after.val() || '';
+    console.log('context', context);
+    console.log('value ', value);
+
+    return updateContactDetails(change.after.ref.parent, 'first_name', value);
+  });
+
+exports.changeContactDataLastName = functions.database.ref('/Users/{pushId}/last_name')
+  .onUpdate((change, context) => {
+    const value = change.after.val() || '';
+    console.log('context', context);
+    console.log('value ', value);
+
+    return updateContactDetails(change.after.ref.parent, 'last_name', value);
+  });
+
+exports.changeContactDataMembershipType = functions.database.ref('/Users/{pushId}/membership_type')
+  .onWrite((change, context) => {
+    const value = change.after.val() || '';
+    console.log('context', context);
+    console.log('value ', value);
+
+    return updateContactDetails(change.after.ref.parent, 'field[%MEMBERSHIPTYPE%,0]', value);
+  });
+
+exports.changeContactDataAccessCode = functions.database.ref('/Users/{pushId}/access_code')
+  .onWrite((change, context) => {
+    const value = change.after.val() || '';
+    console.log('context', context);
+    console.log('value ', value);
+
+    return updateContactDetails(change.after.ref.parent, 'field[%ACCESSCODE%,0]', value);
+  });
+
+exports.changeContactDataTags = functions.database.ref('/Users/{pushId}/tags')
+  .onWrite((change, context) => {
+    const value = change.after.val() || '';
+    console.log('context', context);
+    console.log('value ', value);
+
+    return updateContactDetails(change.after.ref.parent, 'tags', value);
+  });
+
+exports.changeContactDataBirthdate = functions.database.ref('/Users/{pushId}/birthdate')
+  .onWrite((change, context) => {
+    const value = change.after.val() || '';
+    console.log('context', context);
+    console.log('value ', value);
+
+    return updateContactDetails(change.after.ref.parent, 'field[%BIRTHDATE%,0]', value);
+  });
+
+exports.changeContactDataGender = functions.database.ref('/Users/{pushId}/gender')
+  .onWrite((change, context) => {
+    const value = change.after.val() || '';
+    console.log('context', context);
+    console.log('value ', value);
+
+    return updateContactDetails(change.after.ref.parent, 'field[%GENDER%,0]', value);
+  });
+
+exports.changeContactDataLocation = functions.database.ref('/Users/{pushId}/location')
+  .onWrite((change, context) => {
+    const value = change.after.val() || '';
+    console.log('context', context);
+    console.log('value ', value);
+
+    return updateContactDetails(change.after.ref.parent, 'field[%LOCATION%,0]', value);
+  });
+
+exports.changeSubscription = functions.database.ref('/Users/{pushId}/payment')
+  .onWrite((change, context) => {
+    const value = change.after.val() || {};
+    console.log('context', context);
+    console.log('value ', value);
+
+    var subscriptionStatus = (Object.keys(value).length > 0) ? 'Unsubscribe' : 'Not Subscribe';
+    var subscriptionType = 'Free';
+    for (var item in value) {
+      var status = value[item].subscription.replace(/\s+/g, '');
+      if (status === 'active') {
+        subscriptionStatus = 'Subscribe';
+        subscriptionType = value[item].subscription_type;
+      }
+    }
+
+    console.log('subscriptionStatus ', subscriptionStatus);
+    console.log('subscriptionType ', subscriptionType);
+    var listId = 3;
+    if(subscriptionType !== 'Free') {
+      if(subscriptionType.toLowerCase() === 'monthly') {
+        listId = 4
+      }
+      else if(subscriptionType.toLowerCase() === 'yearly') {
+        listId = 5
+      }
+      else if(subscriptionType.toLowerCase() === 'lifetime') {
+        listId = 6
+      }
+    }
+
+    return updateContactDetails(change.after.ref.parent, ['field[%SUBSCRIPTIONSTATUS%,0]', 'field[%SUBSCRIPTIONTYPE%,0]'], [subscriptionStatus, subscriptionType], listId);
+  });
+
+exports.changeIndividualSubscription = functions.database.ref('/Users/{pushId}/IndividualSubscription')
+  .onWrite((change, context) => {
+
+    const value = change.after.val() || {};
+    console.log('context', context);
+    console.log('value ', value);
+
+
+    var subscriptions = '';
+    for (var category in value) {
+      subscriptions += category + '\n';
+      for (var item in value[category]) {
+        subscriptions += '   ' + value[category][item].subscription_type + '\n';
+      }
+    }
+
+    console.log('subscriptions ', subscriptions);
+
+    return updateContactDetails(change.after.ref.parent, 'field[%SUBSCRIPTIONS%,0]', subscriptions);
+  });
+
+
+//////////////////// FUNCTION HELPERS //////////////////////
+
+function addUser(snapshot, userDetails) {
+  var contactDetails = {
+    'email': userDetails.email,
+    'p[3]': "3",
+    'first_name': userDetails.first_name,
+    'last_name': userDetails.last_name,
+    'field[%MEMBERSHIPTYPE%,0]': userDetails.membership_type,
+    'field[%ACCESSCODE%,0]': userDetails.access_code,
+  };
+  if (userDetails.tags) {
+    contactDetails['tags'] = userDetails.tags;
+  }
+  if (userDetails.birthdate) {
+    contactDetails['field[%BIRTHDATE%,0]'] = userDetails.birthdate;
+  }
+  if (userDetails.gender) {
+    contactDetails['field[%GENDER%,0]'] = userDetails.gender;
+  }
+  if (userDetails.location) {
+    contactDetails['field[%LOCATION%,0]'] = userDetails.location;
+  }
+
+  return ac.api("contact/add", contactDetails).then(result => {
+    var contactId = result.subscriber_id;
+    console.log('contactId: ' + contactId);
+    console.log(result);
+    var contact = {
+      'contactId': contactId,
+      'listId': 3,
+      'email': userDetails.email
+    };
+    return snapshot.ref.child('ActiveCampaignData').set(contact);
+  }).catch(error => {
+    console.log(error);
+  });
+}
+
+function updateContactDetails(parent, paramName, paramValue, listId=0) {
+  return parent.child('ActiveCampaignData').once('value').then(snapshot => {
+    var ACData = snapshot.val();
+    if (!ACData) {
+      return null;
+    }
+    console.log('ACData: ', ACData);
+    if(listId === 0) {
+      listId = ACData.listId;
+    }
+    else {
+      snapshot.ref.child('listId').set(listId);
+    }
+      
+    var listIdKey = 'p[' + listId + ']';
+
+    var contactDetails = {
+      'email': ACData.email,
+      'id': ACData.contactId
+    };
+    contactDetails[listIdKey] = listId;
+
+    if ((typeof paramName) === 'string') {
+      contactDetails[paramName] = paramValue;
+    }
+    else {
+      for (var c = 0; c < paramName.length; c++) {
+        contactDetails[paramName[c]] = paramValue[c];
+      }
+    }
+
+    console.log('contactDetails: ', contactDetails);
+
+    try {
+      ac.api("contact/edit", contactDetails);
+    } catch (error) {
+      console.log(error);
+    }
+
+    return Promise.resolve('Success');
+  });
+}
